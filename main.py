@@ -17,6 +17,18 @@ app = fastapi.FastAPI()
 http_client = httpx.AsyncClient()
 
 
+@app.get("/index.html")
+async def get_html_page() -> fastapi.Response:
+    with open("index.html", "r") as f:
+        return fastapi.responses.HTMLResponse(content=f.read())
+
+
+@app.get("/index.js")
+async def get_js_page() -> fastapi.Response:
+    with open("index.js", "r") as f:
+        return fastapi.responses.FileResponse(f.read())
+
+
 @app.post("/extract-audio")
 async def extract_audio(youtube_url: str) -> fastapi.Response:
     yt = YouTube(youtube_url)
