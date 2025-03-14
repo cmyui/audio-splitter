@@ -3,40 +3,21 @@
 import os
 import secrets
 import shutil
-import fastapi
-from fastapi.responses import FileResponse
-import httpx
-import uvicorn
+import sys
+from typing import Sequence
 from pytubefix import YouTube
 import demucs.separate
 from pydub import AudioSegment
 import tempfile
-from starlette.background import BackgroundTask
-
-app = fastapi.FastAPI()
-http_client = httpx.AsyncClient()
 
 
-@app.get("/index.html")
-async def get_html_page() -> fastapi.Response:
-    return fastapi.responses.FileResponse("index.html")
-
-
-@app.get("/index.js")
-async def get_js_page() -> fastapi.Response:
-    return fastapi.responses.FileResponse("index.js")
-
-
-@app.post("/extract-audio")
-async def extract_audio(youtube_url: str) -> fastapi.Response:
+def extract_audio(youtube_url: str):
     yt = YouTube(youtube_url)
 
     yt_audio = yt.streams.get_audio_only()
     if yt_audio is None:
-        return fastapi.responses.JSONResponse(
-            {"error": "No audio stream found"},
-            status_code=400,
-        )
+        print("Error")
+        return None
 
     filename = secrets.token_hex(8)
     tmp_dir = tempfile.mkdtemp()
@@ -62,14 +43,31 @@ async def extract_audio(youtube_url: str) -> fastapi.Response:
         ]
     )
 
-    def cleanup_tmp_dir() -> None:
-        shutil.rmtree(tmp_dir)
+    DESKTOP_FOLDER = os.path.join(os.path.expanduser("~"), "Desktop")
+    shutil.move(f"{tmp_dir}/{model_name}/{filename}/no_vocals.mp3", DESKTOP_FOLDER)
 
-    return FileResponse(
-        f"{tmp_dir}/{model_name}/{filename}/no_vocals.mp3",
-        background=BackgroundTask(cleanup_tmp_dir),
-    )
+    shutil.rmtree(tmp_dir)
+
+    print("File saved to Desktop/no_vocals.mp3")
+
+    return None
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
+
+    if len(argv) != 1:
+        print("Usage: main.py <youtube_url>")
+        return 1
+
+    youtube_url = argv[0]
+
+    extract_audio(youtube_url)
+
+    # label to display error
+    return 0
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", port=13000)
+    exit(main(sys.argv[1:]))
