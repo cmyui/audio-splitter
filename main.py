@@ -3,17 +3,15 @@
 import os
 import secrets
 import shutil
-import httpx
+import sys
+from typing import Sequence
 from pytubefix import YouTube
 import demucs.separate
 from pydub import AudioSegment
 import tempfile
-import tkinter.ttk as ttk
-
-http_client = httpx.AsyncClient()
 
 
-async def extract_audio(youtube_url: str):
+def extract_audio(youtube_url: str):
     yt = YouTube(youtube_url)
 
     yt_audio = yt.streams.get_audio_only()
@@ -45,39 +43,31 @@ async def extract_audio(youtube_url: str):
         ]
     )
 
-    def cleanup_tmp_dir() -> None:
-        shutil.rmtree(tmp_dir)
+    DESKTOP_FOLDER = os.path.join(os.path.expanduser("~"), "Desktop")
+    shutil.move(f"{tmp_dir}/{model_name}/{filename}/no_vocals.mp3", DESKTOP_FOLDER)
 
-    # TODO save/dispal yfile
+    shutil.rmtree(tmp_dir)
+
+    print("File saved to Desktop/no_vocals.mp3")
 
     return None
 
 
-def main() -> int:
-    style = ttk.Style()
-    style.configure("BW.TLabel", foreground="black", background="white")
+def main(argv: Sequence[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
 
-    # textbox to input url and button to execute
-    textbox = ttk.Entry()
-    textbox.pack()
+    if len(argv) != 1:
+        print("Usage: main.py <youtube_url>")
+        return 1
 
-    button = ttk.Button(text="Download")
-    button.pack()
+    youtube_url = argv[0]
 
-    # progress bar
-    progress = ttk.Progressbar(orient="horizontal", length=200, mode="determinate")
-    progress.pack()
+    extract_audio(youtube_url)
 
-    # label to display status
-    label = ttk.Label(text="Status", style="BW.TLabel")
-    label.pack()
-
-    # label to display download path
-    download_path = ttk.Label(text="Download Path", style="BW.TLabel")
-    download_path.pack()
-
+    # label to display error
     return 0
 
 
 if __name__ == "__main__":
-    exit(main())
+    exit(main(sys.argv[1:]))
