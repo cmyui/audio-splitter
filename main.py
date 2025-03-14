@@ -16,8 +16,7 @@ def extract_audio(youtube_url: str):
 
     yt_audio = yt.streams.get_audio_only()
     if yt_audio is None:
-        print("Error")
-        return None
+        raise ValueError("No youtube audio stream found")
 
     filename = secrets.token_hex(8)
     tmp_dir = tempfile.mkdtemp()
