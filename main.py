@@ -19,14 +19,12 @@ http_client = httpx.AsyncClient()
 
 @app.get("/index.html")
 async def get_html_page() -> fastapi.Response:
-    with open("index.html", "r") as f:
-        return fastapi.responses.HTMLResponse(content=f.read())
+    return fastapi.responses.FileResponse("index.html")
 
 
 @app.get("/index.js")
 async def get_js_page() -> fastapi.Response:
-    with open("index.js", "r") as f:
-        return fastapi.responses.FileResponse(f.read())
+    return fastapi.responses.FileResponse("index.js")
 
 
 @app.post("/extract-audio")
