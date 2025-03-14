@@ -29,7 +29,7 @@ async def get_js_page() -> fastapi.Response:
 
 @app.post("/extract-audio")
 async def extract_audio(youtube_url: str) -> fastapi.Response:
-    yt = YouTube(youtube_url, client="WEB")
+    yt = YouTube(youtube_url)
 
     yt_audio = yt.streams.get_audio_only()
     if yt_audio is None:
